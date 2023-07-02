@@ -17,6 +17,8 @@ class Config(BaseSettings):
     CORS_ALLOW_CREDENTIALS: bool = True
     CORS_ALLOW_METHODS: List = ["*"]
     CORS_ALLOW_HEADERS: List = ["*"]
-
+    # 数据库配置
+    DATABASE_URL: str = "sqlite:///./blog.db"
+    
 
 settings = Config()

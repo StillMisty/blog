@@ -7,7 +7,7 @@ from config import settings
 import os
 os.chdir(os.path.dirname(__file__))
 
-from backEnd.config import settings
+from config import settings
 
 app = FastAPI(debug=settings.APP_DEBUG)
 
@@ -30,3 +30,4 @@ app.mount('/', StaticFiles(directory=settings.STATIC_DIR), name="static")
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app='main:app', host="127.0.0.1", port=80, reload=True)
+    
