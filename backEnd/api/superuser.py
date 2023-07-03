@@ -23,7 +23,7 @@ async def superuser_create(
 ):
     '''超级管理员上传文章'''
     if query_is_superuser(user) == False:
-        return fail(msg="fail")
+        return fail(msg="fail", code=404)
     else:
         article.category = ",".join(article.category)
         insert_article(title=article.title, content=article.content, category=article.category)
