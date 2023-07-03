@@ -63,7 +63,8 @@ def insert_article(
     category : List[str],
 ):
     id = BaseService.session.query(articles.id.desc()).scalar()
-    with open(os.path.join(ARTICLE_DIR,str(id) + '.md'), "w") as f:
+    id = copy.deepcopy(id)
+    with open(os.path.join(ARTICLE_DIR,str(id + 1) + '.md'), "w") as f:
         f.write(content)
     content = content[:200] if len(content) > 200 else content
     article = articles(title=title,content=content,category=category)
@@ -75,7 +76,7 @@ def insert_user(
     username: str,
     password: str
 ):
-    password = hash_password(password) #密码加密
+    password = hash_password(password)[:50] #密码加密
     user = users(email=email,password=password,username=username)
     BaseService.session.add(user)
     BaseService.session.commit()
@@ -155,11 +156,11 @@ def query_user_password(
     password: str
 ) -> bool:
     '''返回用户密码是否正确'''
-    user = BaseService.session.query(users).filter(users.email==email).first()
+    user = query_user_email(email)
     if user == None:
         return False
     
-    password = hash_password(password)
+    password = hash_password(password)[:50]
     if password == user.password:
         return True
     else:
@@ -167,19 +168,14 @@ def query_user_password(
     
 def query_is_superuser(
     user: UserLogin
-):
+) -> bool:
     '''返回用户是否是超级管理员'''
-    user = query_user_email(user.email)
-    if user == None:
-        return False
-    user_password = query_user_password(user.email, user.password)
-    if user_password == False:
+    
+    if query_user_password(user.email, user.password) == False:
         return False
 
-    if user.is_superuser == 0:
-        return False
-    else:
-        return True
+    user = query_user_email(user.email)
+    return bool(user.is_superuser)
     
 #更新
 def update_article_views(

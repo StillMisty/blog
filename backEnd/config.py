@@ -21,7 +21,7 @@ class Config(BaseSettings):
     CORS_ALLOW_HEADERS: List = ["*"]
     # 数据库配置
     DATABASE_URL: str = "sqlite:///./blog.db"
-    DATABASE_ECHO: bool = True
+    DATABASE_ECHO: bool = False
     #每页的文章数量
     ARTICLES_PER_PAGE: int = 10
     
