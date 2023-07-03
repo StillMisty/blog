@@ -47,7 +47,7 @@ class comments(Base):
     __tablename__='comments'
     id = Column(Integer, primary_key=True, autoincrement=True)
     content = Column(String(200))
-    create_time = Column(DateTime)
+    create_time = Column(DateTime, default=datetime.now())
     user_id = Column(Integer, ForeignKey('users.id'))
     article_id = Column(Integer, ForeignKey('articles.id'))
     is_delete = Column(Integer, default=0)
@@ -62,8 +62,9 @@ def insert_article(
     content :str, 
     category : List[str],
 ):
-    id = BaseService.session.query(articles.id.desc()).scalar()
+    id = BaseService.session.query(articles.id.desc()).first()[0]
     id = copy.deepcopy(id)
+    id = 1 if id == None else id + 1
     with open(os.path.join(ARTICLE_DIR,str(id) + '.md'), "w") as f:
         f.write(content)
     content = content[:200] if len(content) > 200 else content
@@ -94,11 +95,13 @@ def insert_comment(
 #查询
 def query_article(
     id: int
-) -> articles:
+) -> articles|None:
     '''返回文章详情'''
     article=BaseService.session.query(articles).filter(articles.id==id).first()
     article = copy.deepcopy(article)
     article.content = open(os.path.join(ARTICLE_DIR, str(article.id) + '.md'), mode="r", encoding="utf-8").read()
+    article.create_time = article.create_time.strftime(r"%Y-%m-%d %H:%M:%S")
+    article.category = article.category.split(",")
     article.content = markdown_to_html(article.content)
     return article
 
@@ -106,42 +109,54 @@ def query_article_list(
     page: int,
     limit: int
 ) -> List[articles]:
-    '''返回文章列表'''
+    '''返回不包含删除了的文章列表'''
     article=BaseService.session.query(articles).order_by(articles.id.desc()).filter(articles.is_delete == 0).limit(limit).offset((page-1)*limit).all()
-    return article
+    for article in article:
+        article.create_time = article.create_time.strftime(r"%Y-%m-%d %H:%M:%S")
+        article.category = article.category.split(",")
+    return copy.deepcopy(article)
+
+def query_all_article_count() -> int:
+    """返回包含删除了的总文章数"""
+    article_count = BaseService.session.query(articles.id.desc()).first()
+    return 0 if article_count == None else len(list(article_count))
 
 def query_article_count() -> int:
-    """返回总文章数"""
-    article_count = BaseService.session.query(articles.id.desc()).first()[0]
-    return article_count
+    """返回不包含删除了的总文章数"""
+    article_count = BaseService.session.query(articles.id.desc()).filter(articles.is_delete == 0).first()
+    return 0 if article_count == None else len(list(article_count))
 
 def query_user(
     id: int
 ) -> users:
     '''返回用户详情'''
     user=BaseService.session.query(users).filter(users.id==id).first()
-    return user
+    return copy.deepcopy(user)
 
 def query_comment(
     id: int
 ) -> comments:
     '''返回评论详情'''
     comment=BaseService.session.query(comments).filter(comments.id==id).first()
-    return comment
+    return copy.deepcopy(comment)
 
 def query_article_comment(
     id: int
 ) -> List[comments]:
     '''返回文章评论'''
-    comment=BaseService.session.query(comments).filter(comments.article_id==id and comments.is_delete==0).all()
-    return comment
+    comment=BaseService.session.query(comments).filter(comments.article_id==id).filter(comments.is_delete == 0).all()
+    return copy.deepcopy(comment)
 
 def query_article_category(
     category: str
 ) -> List[articles]:
     '''返回所属分类的文章'''
     article=BaseService.session.query(articles).filter(articles.is_delete == 0).all()
+    article = copy.deepcopy(article)
     article_list = [i for i in article if category in i.category]
+    for article in article_list:
+        article.create_time = article.create_time.strftime(r"%Y-%m-%d %H:%M:%S")
+        article.category = article.category.split(",")
     return article_list
     
 def query_user_email(
@@ -149,7 +164,7 @@ def query_user_email(
 ) -> users | None:
     '''返回邮箱所属用户'''
     user = BaseService.session.query(users).filter(users.email==email).first()
-    return user
+    return copy.deepcopy(user)
 
 def query_user_password(
     email: str,
