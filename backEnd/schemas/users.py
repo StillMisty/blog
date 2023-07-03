@@ -5,4 +5,4 @@ class UserBase(BaseModel):
     id: int
     email: EmailStr
     name: str
-    head_img: FileUrl
+    headimg: FileUrl

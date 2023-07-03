@@ -13,7 +13,7 @@ class Config(BaseSettings):
     STATIC_DIR: str = os.path.join(os.getcwd(), "static")
     TEMPLATE_DIR: str = os.path.join(STATIC_DIR, "templates")
     ARTICLE_DIR: str = os.path.join(STATIC_DIR, "articles")
-    HEADSHOT_DIR: str = os.path.join(STATIC_DIR, "headshots")
+    HEADSHOT_DIR: str = os.path.join(STATIC_DIR, "headimgs")
     # 跨域请求
     CORS_ORIGINS: List = ["*"]
     CORS_ALLOW_CREDENTIALS: bool = True

@@ -50,7 +50,7 @@ async def article_detail(id: int):
 async def article_category(category: str):
     category_list = query_article_category(category=category)
     
-    if category_list is None:
+    if category_list == []:
         return fail(code=404, msg="分类不存在")
     
     return success(data=category_list, msg="success")

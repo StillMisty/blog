@@ -21,7 +21,7 @@ class users(Base):
     id=Column(Integer,primary_key=True, autoincrement=True) #自增
     username=Column(String(50))
     email=Column(String(50), unique=True)
-    head_img=Column(String(50))
+    headimg=Column(String(50))
     
 class articles(Base):
     __tablename__='articles'
@@ -102,5 +102,6 @@ def query_article_category(
     category: str
 ) -> List[articles]:
     '''返回所属分类的文章'''
-    article=BaseService.session.query(articles).filter(articles.category in category).all()
-    return article
+    article=BaseService.session.query(articles).all()
+    article_list = [i for i in article if category in i.category]
+    return article_list

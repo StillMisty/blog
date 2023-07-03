@@ -7,7 +7,7 @@ os.chdir(os.path.dirname(__file__))
 
 from config import settings
 from routers import users, supers
-from api import article
+from api import article, user
 from database.crud import create_table
 
 create_table()
@@ -19,6 +19,8 @@ app.include_router(users.router)
 app.include_router(supers.router)
 
 app.include_router(article.router)
+app.include_router(user.router)
+
 
 # 跨域
 app.add_middleware(
