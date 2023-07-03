@@ -12,6 +12,8 @@ class Config(BaseSettings):
     # 静态资源目录
     STATIC_DIR: str = os.path.join(os.getcwd(), "static")
     TEMPLATE_DIR: str = os.path.join(STATIC_DIR, "templates")
+    ARTICLE_DIR: str = os.path.join(STATIC_DIR, "articles")
+    HEADSHOT_DIR: str = os.path.join(STATIC_DIR, "headshots")
     # 跨域请求
     CORS_ORIGINS: List = ["*"]
     CORS_ALLOW_CREDENTIALS: bool = True
@@ -19,6 +21,9 @@ class Config(BaseSettings):
     CORS_ALLOW_HEADERS: List = ["*"]
     # 数据库配置
     DATABASE_URL: str = "sqlite:///./blog.db"
+    DATABASE_ECHO: bool = True
+    #每页的文章数量
+    ARTICLES_PER_PAGE: int = 10
     
 
 settings = Config()

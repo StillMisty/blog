@@ -1,13 +1,8 @@
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, FileUrl
 
 class UserBase(BaseModel):
     id: int
     email: EmailStr
     name: str
-
-
-class UserCreate(BaseModel):
-    email: EmailStr
-    name: str
-    password: str
+    head_img: FileUrl

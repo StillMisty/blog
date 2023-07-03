@@ -1,19 +1,24 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from routers import users, supers
-from config import settings
 
 import os
 os.chdir(os.path.dirname(__file__))
 
 from config import settings
+from routers import users, supers
+from api import article
+from database.crud import create_table
+
+create_table()
 
 app = FastAPI(debug=settings.APP_DEBUG)
 
 # 路由
 app.include_router(users.router)
 app.include_router(supers.router)
+
+app.include_router(article.router)
 
 # 跨域
 app.add_middleware(
