@@ -169,14 +169,14 @@ def query_is_superuser(
     user: UserLogin
 ):
     '''返回用户是否是超级管理员'''
-    user_email = query_user_email(user.email)
-    if user_email == None:
+    user = query_user_email(user.email)
+    if user == None:
         return False
     user_password = query_user_password(user.email, user.password)
     if user_password == False:
         return False
-    user = BaseService.session.query(users).filter(users.email==user.email and users.is_superuser == 1).first()
-    if user == None:
+
+    if user.is_superuser == 0:
         return False
     else:
         return True
