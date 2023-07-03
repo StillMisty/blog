@@ -1,12 +1,12 @@
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Cookie
 
 from typing import Union
 
-from database.crud import query_article_list, query_article_count, query_article,query_article_category,query_article_comment,query_user
+from database.crud import *
 from schemas.response import success, fail
+from schemas.users import UserCreate
 from config import settings
-import utils
 
 
 router = APIRouter(prefix="/article", tags=["文章"])
@@ -36,8 +36,10 @@ async def article_list(page: Union[int, None] = None):
 
 @router.get("/detail/{id}" ,summary="文章详情")
 async def article_detail(id: int):
-    if utils.article_filer(id=id) is False:
+    if (id is None) or (id < 1) or (id > query_article_count()):
         return fail(code=404, msg="文章不存在")
+    
+    update_article_views(id=id)
     
     article = query_article(id=id)
     article.create_time = article.create_time.strftime(r"%Y-%m-%d %H:%M:%S")
@@ -58,7 +60,7 @@ async def article_category(category: str):
 
 @router.get("/comment/{id}" ,summary="文章评论")
 async def article_comment(id: int):
-    if utils.article_filer(id=id) is False:
+    if (id is None) or (id < 1) or (id > query_article_count()):
         return fail(code=404, msg="文章不存在")
     
     comments = query_article_comment(id=id)
@@ -69,10 +71,17 @@ async def article_comment(id: int):
     return success(data=comments, msg="success")
 
 
+@router.post("/comment/{id}" ,summary="评论文章")
+async def post_comment(
+    id: int,
+    user: UserCreate
+):
+    if not query_user_password(email=user.email,password=user.password):
+        return fail(code=400, msg="邮箱或密码错误")
     
+    if (id is None) or (id < 1) or (id > query_article_count()):
+        return fail(code=404, msg="文章不存在")
     
+    user_id = query_user_email(email=user.email).id
     
-    
-    
-    
-
+    insert_comment(content=user.content,user_id=user_id,article_id=id)

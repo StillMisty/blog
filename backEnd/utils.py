@@ -1,8 +1,23 @@
-from database.crud import query_article_count
 
-def article_filer(id: int) -> bool:
-    '''文章是否存在'''
-    if (id is None) or (id < 1) or (id > query_article_count()):
-        return False
-    else:
-        return True
+import hashlib
+from http.cookies import SimpleCookie
+
+def hash_password(password):
+    '''密码加密'''
+    password = password + "blog" #加盐
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(password.encode('utf-8'))
+    hashed_password = sha256_hash.hexdigest()
+
+    return hashed_password
+    
+
+def set_cookie(emil:str, password:str):
+    '''设置cookie'''
+    
+    cookie = SimpleCookie()
+    password = hash_password(password)
+    # 放弃了，不知道咋用，等后面会了再重构
+    pass
+    
+    

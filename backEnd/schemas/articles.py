@@ -9,7 +9,8 @@ class ArticleBase(BaseModel):
     
 class ArticleCreate(ArticleBase):
     id: int
-    create_time: datetime
     category: List[str]
+
+class Article(ArticleCreate):
     views: int
 

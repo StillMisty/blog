@@ -6,8 +6,8 @@ import os
 os.chdir(os.path.dirname(__file__))
 
 from config import settings
-from routers import users, supers
-from api import article, user
+from routers import users, superusers
+from api import article, user, superuser
 from database.crud import create_table
 
 create_table()
@@ -16,10 +16,11 @@ app = FastAPI(debug=settings.APP_DEBUG)
 
 # 路由
 app.include_router(users.router)
-app.include_router(supers.router)
+app.include_router(superusers.router)
 
 app.include_router(article.router)
 app.include_router(user.router)
+app.include_router(superuser.router)
 
 
 # 跨域
