@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 router = APIRouter()
 
 
-@router.get("/", response_class=HTMLResponse, tags=["超级管理员"])
+@router.get("/super", response_class=HTMLResponse, tags=["超级管理员"])
 async def super():
     '''管理员页面'''
     
