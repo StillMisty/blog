@@ -64,7 +64,7 @@ def insert_article(
 ):
     id = BaseService.session.query(articles.id.desc()).scalar()
     id = copy.deepcopy(id)
-    with open(os.path.join(ARTICLE_DIR,str(id + 1) + '.md'), "w") as f:
+    with open(os.path.join(ARTICLE_DIR,str(id) + '.md'), "w") as f:
         f.write(content)
     content = content[:200] if len(content) > 200 else content
     article = articles(title=title,content=content,category=category)
