@@ -4,11 +4,9 @@ from fastapi.responses import HTMLResponse
 router = APIRouter()
 
 
-@router.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse, tags=["超级管理员"])
 async def super():
-    '''
-    管理员页面
-    '''
+    '''管理员页面'''
     
     file = open("./static/index.html", encoding="utf-8").read()
     

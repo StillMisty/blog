@@ -6,11 +6,8 @@ from pydantic import BaseModel
 class ArticleBase(BaseModel):
     title: str
     content: str
-    
-class ArticleCreate(ArticleBase):
-    id: int
     category: List[str]
 
-class Article(ArticleCreate):
+class Article(ArticleBase):
     views: int
 

@@ -6,9 +6,14 @@ from sqlalchemy.orm import sessionmaker
 from  sqlalchemy import create_engine
 from datetime import datetime
 from typing import List
+import copy
+import os
 
-from utils import hash_password
-from schemas.users import UserCreate
+from utils import hash_password, markdown_to_html
+from schemas.users import UserLogin
+from config import settings
+
+ARTICLE_DIR = settings.ARTICLE_DIR
 
 class BaseService(object):
     engine = create_engine(settings.DATABASE_URL, echo=settings.DATABASE_ECHO)
@@ -32,10 +37,11 @@ class articles(Base):
     __tablename__='articles'
     id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(50))
-    content = Column(String(50))
+    content = Column(String(200))
     create_time = Column(DateTime, default=datetime.now())
     category = Column(String(50))
     views = Column(Integer, default=0)
+    is_delete = Column(Integer, default=0)
     
 class comments(Base):
     __tablename__='comments'
@@ -44,6 +50,7 @@ class comments(Base):
     create_time = Column(DateTime)
     user_id = Column(Integer, ForeignKey('users.id'))
     article_id = Column(Integer, ForeignKey('articles.id'))
+    is_delete = Column(Integer, default=0)
     
 #建表
 def create_table():
@@ -55,17 +62,21 @@ def insert_article(
     content :str, 
     category : List[str],
 ):
+    id = BaseService.session.query(articles.id.desc()).scalar()
+    with open(os.path.join(ARTICLE_DIR,str(id) + '.md'), "w") as f:
+        f.write(content)
+    content = content[:200] if len(content) > 200 else content
     article = articles(title=title,content=content,category=category)
     BaseService.session.add(article)
     BaseService.session.commit()
 
 def insert_user(
-    emil: str,
+    email: str,
     username: str,
     password: str
 ):
     password = hash_password(password) #密码加密
-    user = users(emil=emil,password=password,username=username)
+    user = users(email=email,password=password,username=username)
     BaseService.session.add(user)
     BaseService.session.commit()
     
@@ -84,7 +95,10 @@ def query_article(
     id: int
 ) -> articles:
     '''返回文章详情'''
-    article=BaseService.session.query(articles).filter(articles.id==id).all()
+    article=BaseService.session.query(articles).filter(articles.id==id).first()
+    article = copy.deepcopy(article)
+    article.content = open(os.path.join(ARTICLE_DIR, str(article.id) + '.md'), mode="r", encoding="utf-8").read()
+    article.content = markdown_to_html(article.content)
     return article
 
 def query_article_list(
@@ -92,67 +106,67 @@ def query_article_list(
     limit: int
 ) -> List[articles]:
     '''返回文章列表'''
-    article=BaseService.session.query(articles).order_by(articles.id.desc()).limit(limit).offset((page-1)*limit).all()
+    article=BaseService.session.query(articles).order_by(articles.id.desc()).filter(articles.is_delete == 0).limit(limit).offset((page-1)*limit).all()
     return article
 
 def query_article_count() -> int:
     """返回总文章数"""
-    article_count = BaseService.session.query(articles).count()
+    article_count = BaseService.session.query(articles.id.desc()).first()[0]
     return article_count
 
 def query_user(
     id: int
 ) -> users:
     '''返回用户详情'''
-    user=BaseService.session.query(users).filter(users.id==id).all()
+    user=BaseService.session.query(users).filter(users.id==id).first()
     return user
 
 def query_comment(
     id: int
 ) -> comments:
     '''返回评论详情'''
-    comment=BaseService.session.query(comments).filter(comments.id==id).all()
+    comment=BaseService.session.query(comments).filter(comments.id==id).first()
     return comment
 
 def query_article_comment(
-    article_id: int
+    id: int
 ) -> List[comments]:
     '''返回文章评论'''
-    comment=BaseService.session.query(comments).filter(comments.article_id==article_id).all()
+    comment=BaseService.session.query(comments).filter(comments.article_id==id and comments.is_delete==0).all()
     return comment
 
 def query_article_category(
     category: str
 ) -> List[articles]:
     '''返回所属分类的文章'''
-    article=BaseService.session.query(articles).all()
+    article=BaseService.session.query(articles).filter(articles.is_delete == 0).all()
     article_list = [i for i in article if category in i.category]
     return article_list
     
 def query_user_email(
     email: str
-) -> list:
+) -> users | None:
     '''返回邮箱所属用户'''
-    user_email=BaseService.session.query(users).filter(users.email==email).first()
-    return user_email
+    user = BaseService.session.query(users).filter(users.email==email).first()
+    return user
 
 def query_user_password(
     email: str,
     password: str
-) -> str:
+) -> bool:
     '''返回用户密码是否正确'''
     user = BaseService.session.query(users).filter(users.email==email).first()
     if user == None:
         return False
     
     password = hash_password(password)
-    if password == hash_password(user.password):
+    if password == user.password:
         return True
     else:
         return False
     
 def query_is_superuser(
-    user: UserCreate
+    user: UserLogin
 ):
     '''返回用户是否是超级管理员'''
     user_email = query_user_email(user.email)
@@ -161,13 +175,8 @@ def query_is_superuser(
     user_password = query_user_password(user.email, user.password)
     if user_password == False:
         return False
-    is_superuser = query_is_superuser(user_email.id)
-    if is_superuser == False:
-        return False
-    
-    user = BaseService.session.query(users).filter(users.email==user.email).first()
-    
-    if user.is_superuser == 0:
+    user = BaseService.session.query(users).filter(users.email==user.email and users.is_superuser == 1).first()
+    if user == None:
         return False
     else:
         return True
@@ -187,7 +196,7 @@ def delete_article(
 ):
     '''删除文章'''
     article = BaseService.session.query(articles).filter(articles.id==id).first()
-    BaseService.session.delete(article)
+    article.is_delete = 1
     BaseService.session.commit()
 
 def delete_comment(
@@ -195,5 +204,5 @@ def delete_comment(
 ):
     '''删除评论'''
     comment = BaseService.session.query(comments).filter(comments.id==id).first()
-    BaseService.session.delete(comment)
+    comment.is_delete = 1
     BaseService.session.commit()

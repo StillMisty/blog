@@ -1,6 +1,8 @@
 
 import hashlib
+import markdown
 from http.cookies import SimpleCookie
+
 
 def hash_password(password):
     '''密码加密'''
@@ -21,3 +23,7 @@ def set_cookie(emil:str, password:str):
     pass
     
     
+def markdown_to_html(content:str):
+    '''md转html'''
+    content = markdown.markdown(content)
+    return content
